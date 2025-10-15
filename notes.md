@@ -31,7 +31,7 @@ The IP of the VM will be in the subnet `10.11.3.13/16`. We could scan with nmap 
 ```
 nlederge@k0r3p13:~ $ nmap -sn 10.11.250-254.0-254
 Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-15 11:51 +0200
-Nmap scan report for 10.11.250.231
+Nmap scan report for 10.11.250.230
 Host is up (0.00030s latency).
 Nmap scan report for 10.11.250.250
 Host is up (0.0041s latency).
@@ -40,12 +40,12 @@ Host is up (0.00038s latency).
 Nmap done: 1275 IP addresses (3 hosts up) scanned in 33.16 seconds
 ```
 
-We have two potential candidates: `10.11.250.231` and `10.11.250.250`. Let's see which ports are open.
+We have two potential candidates: `10.11.250.230` and `10.11.250.250`. Let's see which ports are open.
 
 ```
-nlederge@k0r3p13:~ $ nmap 10.11.250.231 10.11.250.250
+nlederge@k0r3p13:~ $ nmap 10.11.250.230 10.11.250.250
 Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-15 11:53 +0200
-Nmap scan report for 10.11.250.231
+Nmap scan report for 10.11.250.230
 Host is up (0.000027s latency).
 Not shown: 994 closed tcp ports (conn-refused)
 PORT    STATE SERVICE
@@ -71,4 +71,4 @@ PORT     STATE SERVICE
 Nmap done: 2 IP addresses (2 hosts up) scanned in 1.06 seconds
 ```
 
-By opening the `10.11.250.231` in a browser, we can see that it is a web server asking to hack it, confirming our hypothesis.
+By opening the `10.11.250.230` in a browser, we can see that it is a web server asking to hack it, confirming our hypothesis.
