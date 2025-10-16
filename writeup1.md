@@ -349,3 +349,96 @@ uid=1003(laurie) gid=1003(laurie) groups=1003(laurie)
 ```
 
 ## laurie's bomb
+
+Inside laurie's home directory, there are two files : a binary `bomb` and a file `README` giving hints on how to use it.
+```
+laurie@BornToSecHackMe:~$ ls
+README  bomb
+laurie@BornToSecHackMe:~$ cat README 
+Diffuse this bomb!
+When you have all the password use it as "thor" user with ssh.
+
+HINT:
+P
+ 2
+ b
+
+o
+4
+
+NO SPACE IN THE PASSWORD (password is case sensitive).
+```
+
+The `bomb` asks us to diffuse it by providing correct informations to pass the 6 different stages.
+
+```
+laurie@BornToSecHackMe:~$ ./bomb 
+Welcome this is my little bomb !!!! You have 6 stages with
+only one life good luck !! Have a nice day!
+test
+
+BOOM!!!
+The bomb has blown up.
+```
+
+Let's `scp laurie@10.11.250.230:~/bomb .` the `bomb` file to our machine with the credentials `laurie` : `330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4` and open it with `binaryninja`.
+
+The main function either takes a file as argument or stdin. It then calls the phase functions in order.
+```
+080489b0    int32_t main(int32_t argc, char** argv, char** envp)
+080489c0        void* const var_28
+080489c0        
+080489c0        if (argc != 1)
+080489d3            if (argc != 2)
+08048a1b                printf(format: "Usage: %s [<input_file>]\n", *argv)
+08048a25                exit(status: 8)
+08048a25                noreturn
+08048a25            
+080489d8            var_28 = &data_8049620
+080489e1            FILE* eax_2 = fopen(filename: argv[1], mode: u"r…")
+080489e6            infile = eax_2
+080489e6            
+080489f0            if (eax_2 == 0)
+08048a01                printf(format: "%s: Error: Couldn't open %s\n", *argv, argv[1])
+08048a0b                exit(status: 8)
+08048a0b                noreturn
+080489c0        else
+080489c7            infile = stdin
+080489c7        
+08048a30        initialize_bomb()
+08048a3d        printf(format: "Welcome this is my little bomb !…", var_28)
+08048a4a        printf(format: "only one life good luck !! Have …")
+08048a5b        phase_1(read_line())
+08048a60        phase_defused()
+08048a6d        printf(format: "Phase 1 defused. How about the n…")
+08048a7e        phase_2(read_line())
+08048a83        phase_defused()
+08048a90        printf(format: "That's number 2.  Keep going!\n")
+08048aa1        phase_3(read_line())
+08048aa6        phase_defused()
+08048ab3        printf(format: "Halfway there!\n")
+08048ac4        phase_4(read_line())
+08048ac9        phase_defused()
+08048ad6        printf(format: "So you got that one.  Try this o…")
+08048ae7        phase_5(read_line())
+08048aec        phase_defused()
+08048af9        printf(format: "Good work!  On to the next...\n")
+08048b0a        phase_6(read_line())
+08048b0f        phase_defused()
+08048b1c        return 0
+```
+
+The `phase_1` function compares the input with the string `Public speaking is very easy.` and explodes the bomb if they are not equal.
+Therefore, the first line of the solutions will be `Public speaking is very easy.`.
+
+```
+08048b20    int32_t phase_1(char* arg1)
+08048b32        int32_t result = strings_not_equal(arg1, "Public speaking is very easy.")
+08048b32        
+08048b3c        if (result == 0)
+08048b46            return result
+08048b46        
+08048b3e        explode_bomb()
+08048b3e        noreturn
+```
+
