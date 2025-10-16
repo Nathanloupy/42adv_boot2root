@@ -573,3 +573,182 @@ The `phase_4` function reads an integer and calls the `func4` function. If the r
 08048d22        explode_bomb()
 08048d22        noreturn
 ```
+
+The `phase_5` function reads a stripekmqng of exactly 6 characters and loop on it and uses a bitwise `AND` mask of `0xf` (15) to get the index of the new character in the string `isrveawhobpnutfg`. Then it compares the resulting string with the string `giants`. Therefore the solution will be `opekmq`.
+
+```
+  0110 1111  ('o')
+& 0000 1111  (0xf)
+-----------
+  0000 1111  = 15 (decimal) = 0xF (hex)
+-> string[15] = 'g'
+```
+
+Any character whose lower 4 bits equal 15 will work for getting the first letter `g`. For example `?` is also valid because its binary representation is `0011 1111`. But if we look at our HINT, we can see that the first character must be a `o`. That's why we will be using alphabetical characters for the rest.
+
+```
+08048d2c    int32_t phase_5(char* arg1)
+08048d46        if (string_length(arg1) != 6)
+08048d48            explode_bomb()
+08048d48            noreturn
+08048d48        
+08048d69        char var_c[0x6]
+08048d69        
+08048d69        for (char* i = nullptr; i s<= 5; i = &i[1])
+08048d57            int32_t eax
+08048d57            eax.b = *(i + arg1)
+08048d5a            eax.b &= 0xf
+08048d5f            eax.b = (*"isrveawhobpnutfg")[sx.d(eax.b)]
+08048d62            *(i + &var_c) = eax.b
+08048d62        
+08048d6b        char var_6 = 0
+08048d7b        int32_t result = strings_not_equal(&var_c, "giants")
+08048d7b        
+08048d85        if (result == 0)
+08048d94            return result
+08048d94        
+08048d87        explode_bomb()
+08048d87        noreturn
+```
+
+The `phase_6` takes a string of 6 int and check if their values are between 1 and 6 and if they are not duplicates. Then it will create a linked list from node 1 to 6 and check if the value of each element in the list is in a decreasing order. So we need to find the value of each node, so then we can rearrange them in a decreasing order.
+
+```
+$ objdump -t bomb | grep node
+0804b230 g     O .data	0000000c              node6
+0804b254 g     O .data	0000000c              node3
+0804b23c g     O .data	0000000c              node5
+0804b248 g     O .data	0000000c              node4
+0804b26c g     O .data	0000000c              node1
+0804b260 g     O .data	0000000c              node2
+```
+
+```
+$ gdb -q bomb
+GEF for linux ready, type `gef' to start, `gef config' to configure
+93 commands loaded and 5 functions added for GDB 12.1 in 0.00ms using Python engine 3.10
+Reading symbols from bomb...
+gef➤  x/3wx 0x0804b230
+0x804b230 <node6>:	0x000001b0	0x00000006	0x00000000
+gef➤  x/3wx 0x0804b26c
+0x804b26c <node1>:	0x000000fd	0x00000001	0x0804b260
+gef➤  x/3wx 0x0804b254
+0x804b254 <node3>:	0x0000012d	0x00000003	0x0804b248
+gef➤  x/3wx 0x0804b23c
+0x804b23c <node5>:	0x000000d4	0x00000005	0x0804b230
+gef➤  x/3wx 0x0804b248
+0x804b248 <node4>:	0x000003e5	0x00000004	0x0804b23c
+gef➤  x/3wx 0x0804b26c
+0x804b26c <node1>:	0x000000fd	0x00000001	0x0804b260
+gef➤  x/3wx 0x0804b260
+0x804b260 <node2>:	0x000002d5	0x00000002	0x0804b254
+```
+
+```
+node1 -> 253
+node2 -> 725
+node3 -> 301
+node4 -> 997
+node5 -> 212
+node6 -> 432
+```
+
+We just need to rearrange them in a decreasing order.
+```
+997 (node4) → 725 (node2) → 432 (node6) → 301 (node3) → 253 (node1) → 212 (node5)
+```
+
+So out solution for that phase will be `4 2 6 3 1 5`.
+
+
+```
+08048d98    int32_t phase_6(char* arg1)
+08048d9f        int32_t (* esi)[0x6]
+08048d9f        int32_t (* var_58)[0x6] = esi
+08048db3        int32_t var_1c[0x6]
+08048db3        read_six_numbers(arg1, &var_1c)
+08048db3        
+08048e00        for (int32_t i = 0; i s<= 5; i += 1)
+08048dca            if (var_1c[i] - 1 u> 5)
+08048dcc                explode_bomb()
+08048dcc                noreturn
+08048dcc            
+08048dd7            for (int32_t j = i + 1; j s<= 5; j += 1)
+08048def                if (var_1c[i] == var_1c[j])
+08048df1                    explode_bomb()
+08048df1                    noreturn
+08048df1        
+08048e42        int32_t var_34[0x6]
+08048e42        
+08048e42        for (int32_t i_1 = 0; i_1 s<= 5; i_1 += 1)
+08048e10            void* esi_3 = &node1
+08048e13            int32_t j_1 = 1
+08048e13            
+08048e24            if (1 s< var_1c[i_1])
+08048e29                esi_3 = &node1
+08048e29                
+08048e36                do
+08048e30                    esi_3 = *(esi_3 + 8)
+08048e33                    j_1 += 1
+08048e36                while (j_1 s< var_1c[i_1])
+08048e36            
+08048e3b            var_34[i_1] = esi_3
+08048e3b        
+08048e44        int32_t* esi_4 = var_34[0]
+08048e47        int32_t* var_38 = esi_4
+08048e47        
+08048e5e        for (int32_t i_2 = 1; i_2 s<= 5; i_2 += 1)
+08048e52            int32_t* eax_7 = var_34[i_2]
+08048e55            esi_4[2] = eax_7
+08048e58            esi_4 = eax_7
+08048e58        
+08048e60        esi_4[2] = 0
+08048e6a        int32_t i_3 = 0
+08048e6c        int32_t* esi_6 = var_38
+08048e85        int32_t result
+08048e85        
+08048e85        do
+08048e73            result = *esi_6
+08048e73            
+08048e77            if (result s< *esi_6[2])
+08048e79                explode_bomb()
+08048e79                noreturn
+08048e79            
+08048e7e            esi_6 = esi_6[2]
+08048e81            i_3 += 1
+08048e85        while (i_3 s<= 4)
+08048e85        
+08048e90        return result
+```
+
+If we put all of our solutions at once, we can defuse the bomb :
+
+```
+Welcome this is my little bomb !!!! You have 6 stages with
+only one life good luck !! Have a nice day!
+Public speaking is very easy.
+Phase 1 defused. How about the next one?
+1 2 6 24 120 720
+That's number 2.  Keep going!
+1 b 214
+Halfway there!
+9
+So you got that one.  Try this one.
+opekmq
+Good work!  On to the next...
+4 2 6 3 1 5
+Congratulations! You've defused the bomb!
+```
+
+Nevertheless, that doesnt give us the password for the next user. So we need refer back to the `README` file.
+So the "thor" password will be `Publicspeakingisveryeasy.126241207201b2149opekmq426315`
+According to the subject we need to swap '1' with '3' `For the part related to a (bin) bomb: If the password found is 123456. The password to use is 123546.`.
+So the final password will be `Publicspeakingisveryeasy.126241207201b2149opekmq426135`.
+
+```
+laurie@BornToSecHackMe:~$ su thor
+Password: 
+thor@BornToSecHackMe:~$ id
+uid=1004(thor) gid=1004(thor) groups=1004(thor)
+```
+
