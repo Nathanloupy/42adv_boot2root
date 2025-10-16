@@ -442,3 +442,134 @@ Therefore, the first line of the solutions will be `Public speaking is very easy
 08048b3e        noreturn
 ```
 
+The `phase_2` function reads 6 numbers from the input. If the first number is not 1, it explodes the bomb. It then compares successively the numbers according to the formula `number[i] = (i + 1) * number[i-1]`. Therefore, the second line of the solutions will be `1 2 6 24 120 720`.
+
+```
+08048b48    int32_t phase_2(char* arg1)
+08048b5b        int32_t var_1c[0x6]
+08048b5b        read_six_numbers(arg1, &var_1c)
+08048b5b        
+08048b67        if (var_1c[0] != 1)
+08048b69            explode_bomb()
+08048b69            noreturn
+08048b69        
+08048b8c        int32_t result
+08048b8c        
+08048b8c        for (int32_t i = 1; i s<= 5; i += 1)
+08048b79            void var_20
+08048b79            result = (i + 1) * *(&var_20 + (i << 2))
+08048b79            
+08048b81            if (var_1c[i] != result)
+08048b83                explode_bomb()
+08048b83                noreturn
+08048b83        
+08048b96        return result
+```
+
+The `phase_3` function reads an integer, a character and an integer called here `result_1`, `c` and `i`.
+If `result_1` is greater than 7, it explodes the bomb. Otherwise, it switches on `result_1` and compares `i` with the expected value. If it is not equal, it explodes the bomb.
+At the end of the function it compares `c` with the value of `ebx.b`. If they are not equal, it explodes the bomb. The value of `ebx.b` is determined by the switch statement.
+An valid solution would be `0 q 777` but according to the hint, the character must be a `b`. Therefore, we will be using the second switch statement and the third line of the solutions will be `1 b 214`.
+
+```
+08048b98    int32_t phase_3(char* arg1)
+08048bc2        int32_t result_1
+08048bc2        char c
+08048bc2        int32_t i
+08048bc2        
+08048bc2        if (sscanf(s: arg1, format: "%d %c %d", &result_1, &c, &i) s<= 2)
+08048bc4            explode_bomb()
+08048bc4            noreturn
+08048bc4        
+08048bcd        int32_t ebx
+08048bcd        
+08048bcd        if (result_1 u> 7)
+08048c88            ebx.b = 0x78
+08048c8a            explode_bomb()
+08048c8a            noreturn
+08048c8a        
+08048bd3        int32_t result = result_1
+08048bd3        
+08048bd6        switch (result)
+08048be0            case 0
+08048be0                ebx.b = 0x71
+08048be0                
+08048be9                if (i != 0x309)
+08048bef                    explode_bomb()
+08048bef                    noreturn
+08048c00            case 1
+08048c00                ebx.b = 0x62
+08048c00                
+08048c09                if (i != 0xd6)
+08048c0f                    explode_bomb()
+08048c0f                    noreturn
+08048c16            case 2
+08048c16                ebx.b = 0x62
+08048c16                
+08048c1f                if (i != 0x2f3)
+08048c21                    explode_bomb()
+08048c21                    noreturn
+08048c28            case 3
+08048c28                ebx.b = 0x6b
+08048c28                
+08048c31                if (i != 0xfb)
+08048c33                    explode_bomb()
+08048c33                    noreturn
+08048c40            case 4
+08048c40                ebx.b = 0x6f
+08048c40                
+08048c49                if (i != 0xa0)
+08048c4b                    explode_bomb()
+08048c4b                    noreturn
+08048c52            case 5
+08048c52                ebx.b = 0x74
+08048c52                
+08048c5b                if (i != 0x1ca)
+08048c5d                    explode_bomb()
+08048c5d                    noreturn
+08048c64            case 6
+08048c64                ebx.b = 0x76
+08048c64                
+08048c6d                if (i != 0x30c)
+08048c6f                    explode_bomb()
+08048c6f                    noreturn
+08048c76            case 7
+08048c76                ebx.b = 0x62
+08048c76                
+08048c7f                if (i != 0x20c)
+08048c81                    explode_bomb()
+08048c81                    noreturn
+08048c81        
+08048c92        if (ebx.b == c)
+08048c9f            return result
+08048c9f        
+08048c94        explode_bomb()
+08048c94        noreturn
+```
+
+The `phase_4` function reads an integer and calls the `func4` function. If the result is not 55 (0x37), it explodes the bomb. The `func4` function is a recursive function that returns the n-th Fibonacci number. Therefore, the solution will be `9`.
+
+```
+08048ca0    int32_t func4(int32_t arg1)
+08048cae        if (arg1 s<= 1)
+08048cd0            return 1
+08048cd0        
+08048cb7        int32_t eax_1 = func4(arg1 - 1)
+08048cca        return func4(arg1 - 2) + eax_1
+
+
+08048ce0    int32_t phase_4(char* arg1)
+08048d07        int32_t var_8
+08048d07        
+08048d07        if (sscanf(s: arg1, format: "%d", &var_8) != 1 || var_8 s<= 0)
+08048d09            explode_bomb()
+08048d09            noreturn
+08048d09        
+08048d15        int32_t result = func4(var_8)
+08048d15        
+08048d20        if (result == 0x37)
+08048d2a            return result
+08048d2a        
+08048d22        explode_bomb()
+08048d22        noreturn
+```
