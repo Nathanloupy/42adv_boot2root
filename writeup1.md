@@ -752,3 +752,39 @@ thor@BornToSecHackMe:~$ id
 uid=1004(thor) gid=1004(thor) groups=1004(thor)
 ```
 
+# zaz's turtle
+
+The home directory of the "zaz" user contains a file `turtle` that contains a sequence of commands to move a turtle on a grid.
+
+```
+thor@BornToSecHackMe:~$ ls
+README  turtle
+thor@BornToSecHackMe:~$ cat README
+Finish this challenge and use the result as password for 'zaz' user.
+thor@BornToSecHackMe:~$ cat turtle 
+Tourne gauche de 90 degrees
+Avance 50 spaces
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+...
+```
+
+We can `scp thor@10.11.250.230:~/turtle .` to get the file.
+Then we can run the file with `python3 scripts/run_turtle.py`.
+It draws the letter `SLASH` on the screen, it doesn't work but the MD5 of `SLASH` does, because why would it be indicated ?
+
+```
+$ echo -n SLASH | md5sum           
+646da671ca01bb5d84dbb5fb2238dc8e  -
+```
+
+So the password for the `zaz` user is `646da671ca01bb5d84dbb5fb2238dc8e`.
+
+```
+zaz@BornToSecHackMe:~$ id
+uid=1005(zaz) gid=1005(zaz) groups=1005(zaz)
+```
