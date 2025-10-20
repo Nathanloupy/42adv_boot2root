@@ -43,7 +43,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 #
 ```
 
-Now that we have edited the crontab file, we need to reload it. To do so, we will use `exploit_me`. We will create a file called `dirty_crontab_reload.c` that creates a backup of `/home/zaz/exploit_me` and executes `service cron restart.`
+Now that we have edited the crontab file, we need to reload it. To do so, we will use `exploit_me`. We will create a file called `dirty_crontab_reload.c` that creates a backup of `/home/zaz/exploit_me` and executes `service cron restart`
 We need to use `msfvenom` to create our payload.
 
 ```
